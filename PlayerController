@@ -1,0 +1,116 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class PlayerControl : MonoBehaviour
+{
+    [SerializeField] float speed= 5f;
+    [SerializeField] float jumpForce=7f;
+    bool isGrounded = false;
+    Rigidbody2D rb; 
+    [SerializeField] LayerMask groundLayer; //identifica la capa de suelo
+    SpriteRenderer sprite;
+    Animator anim; 
+    
+    // creado m6l1
+    [SerializeField] GameObject prefab; // El objeto de plataforma que crearemos
+    GameObject building_prefab; // Una variable en la que almacenaremos la plataforma creada actualmente
+    int steps = 0; // El número de plataformas en el inventario
+    [SerializeField] GameObject steps_panel; // El panel de interfaz de inventario
+
+    public void Build_Click()
+    {
+    steps--; // Disminuir el número de plataformas en el inventario
+    foreach (Transform child in steps_panel.transform)
+    {
+    
+        if (child.gameObject.activeInHierarchy) // Si el objeto está activo...
+        {
+            child.gameObject.SetActive(false); // Desactivarlo
+
+            building_prefab = Instantiate(prefab); // Crear una plataforma y almacenarla en la variable
+            return; // Deteniendo las iteraciones
+        }
+        
+    }
+    }
+
+    void Start()
+    {
+        rb = GetComponent<Rigidbody2D>();
+        sprite = GetComponent<SpriteRenderer>();
+        anim = GetComponent<Animator>();
+        
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+         float horizontalInput = Input.GetAxis("Horizontal");
+        if (horizontalInput > 0)
+        {
+            sprite.flipX = false;
+        }
+        if (horizontalInput < 0)
+        {
+            sprite.flipX = true;
+        }
+        
+        if(horizontalInput !=0)
+        {
+            anim.SetBool("Run",true);
+
+        }
+
+        else
+        {
+            anim.SetBool("Run",false);
+        }
+
+        anim.SetFloat("Y", rb.velocity.y);
+        if (isGrounded) 
+        anim.SetFloat("Y", 0); 
+     
+
+         rb.velocity = new Vector2(horizontalInput * speed, rb.velocity.y);
+         Collider2D col = GetComponent<Collider2D>(); //add
+         isGrounded = Physics2D.OverlapCircle(transform.position - transform.up * ((col.bounds.extents.y / transform.localScale.y - col.offset.y) * transform.localScale.y), 0.01f, groundLayer);
+
+        if(Input.GetKeyDown(KeyCode.Space) && isGrounded)
+        {
+           rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+        }
+
+    if (building_prefab) 
+    {
+
+    Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition); 
+    building_prefab.transform.position = new Vector3(mousePosition.x, mousePosition.y, transform.position.z); 
+    if (Input.GetMouseButtonDown(0)) 
+    {
+        building_prefab.GetComponent<Collider2D>().enabled = true; 
+        building_prefab = null; 
+        
+    }
+}
+    }
+    //m6l1
+    void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.tag == "block") 
+        {
+            steps++; 
+            Destroy(collision.gameObject); 
+            foreach (Transform child in steps_panel.transform) 
+            {
+            if (!child.gameObject.activeInHierarchy) 
+             {
+            child.gameObject.SetActive(true);
+            return; 
+            }
+             }
+        }
+    }
+
+
+}
