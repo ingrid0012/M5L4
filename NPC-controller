@@ -1,0 +1,18 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class NPC_controller : MonoBehaviour
+{
+    [SerializeField] GameObject tip, objects;
+
+   private void OnTriggerEnter2D(Collider2D other)
+{
+    objects.SetActive(true);
+    tip.SetActive(true);
+    Destroy(tip, 4);
+    Destroy(this);
+}
+
+
+}
